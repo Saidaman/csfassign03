@@ -13,15 +13,18 @@ int main(int argc, char *argv[]) {
     int numBlocks;
     int numSets;
     int numBytes;
+    std::string writeAllocation;
+    std::string howToWrite;
+    std::string eviction;
 
     //checking for command-line input
-    if(argc == 7) {                                     //do we even need to check for this?
+    if(argc == 7) { //do we even need to check for this?
         numSets = std::stoi(argv[1]); //turns type char into an int
         numBlocks = std::stoi(argv[2]);
         numBytes = std::stoi(argv[3]);
-        std::string writeAllocation = argv[4];
-        std::string howToWrite = argv[5];
-        std::string eviction = argv[6];
+        writeAllocation = argv[4];
+        howToWrite = argv[5];
+        eviction = argv[6];
     }
     else { //if there are not 6 other parameters passed in from command line other than ./csim
         std::cerr << "Not enough parameters passed in through command line\n";
@@ -29,8 +32,19 @@ int main(int argc, char *argv[]) {
     }
 
     //command line input error-checking
-    if ((numBlocks % 2) != 0) {
+    //when numBlocks is not a power of 2: https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
+    if ((numBlocks != 0) && ((numBlocks & (numBlocks - 1)) == 0)) {
         std::cerr << "block size is not a power of 2";
+        return 2;
+    }
+    //when numSets is not a power of 2
+    if ((numSets != 0) && ((numSets & (numSets - 1)) == 0)) {
+        std::cerr << "number of sets is not a power of 2";
+        return 2;
+    }
+    //when numBlocks is less than 4
+    if (numBlocks < 4) {
+        std::cerr << "block size is less than 4";
         return 2;
     }
     
