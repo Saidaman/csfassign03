@@ -11,7 +11,7 @@ LDFLAGS = -no-pie
 
 solution.zip :
 	rm -f solution.zip
-	zip -9r $@ Makefile README.txt *.h *.c *.S
+	zip -9r $@ Makefile README.txt *.h *.cpp
 
 clean :
 	rm -f *.o solution.zip
