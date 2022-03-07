@@ -5,6 +5,6 @@
  * shossa11@jhu.edu, searla1@jhu.edu
  */
 
-int main() {
+int main(int argc, char *argv[]) {
 
 }
