@@ -13,7 +13,7 @@ below are *estimations* of who mostly worked on what functionality. Whatever fun
 below were evenly split among the team members.
 
 Saidaman Earla Contributions:
-Prepared GitHub repo and mostly worked on the C main method and asm_hexmain.S
+Prepared GitHub repo and *to be completed after code implementation*
 
 Shayan Hossain Contributions:
-Mostly worked on implementing C functions, asm_hexfuncs.S and did finishing touches (stylistic consistency, etc.)
+Mostly worked on *to be completed after code implementation* and did finishing touches (stylistic consistency, etc.)
