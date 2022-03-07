@@ -10,9 +10,7 @@ LDFLAGS = -no-pie
 %.o : %.c
 	gcc $(CXXFLAGS) -cpp $<
 
-csim : main
-
-main : main.o
+csim : main.o #add others?
 	gcc -o $@ $(LDFLAGS) main.o
 
 solution.zip :
@@ -20,4 +18,4 @@ solution.zip :
 	zip -9r $@ Makefile README.txt *.h *.cpp *.S
 
 clean :
-	rm -f *.o solution.zip
+	rm -f *.o csim solution.zip
