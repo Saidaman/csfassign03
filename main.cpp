@@ -47,5 +47,9 @@ int main(int argc, char *argv[]) {
         std::cerr << "block size is less than 4";
         return 2;
     }
-    
+    //when write-back and no-write-allocate were both specified
+    if (writeAllocation.compare("write-back") == 0 && howToWrite.compare("no-write-allocate") == 0) {
+        std::cerr << "write-back and no-write-allocate were both specified";
+        return 2;
+    }
 }
