@@ -48,7 +48,7 @@ int main(int argc, char *argv[]) {
         return 2;
     }
     //when write-back and no-write-allocate were both specified
-    if (writeAllocation.compare("write-back") == 0 && howToWrite.compare("no-write-allocate") == 0) {
+    if (writeAllocation.compare("write-back") == 0 && howToWrite.compare("no-write-allocate") == 0) { // can you use .compare() with string literals
         std::cerr << "write-back and no-write-allocate were both specified";
         return 2;
     }
