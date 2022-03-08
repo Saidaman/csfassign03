@@ -8,6 +8,8 @@
  * shossa11@jhu.edu, searla1@jhu.edu
  */
 
+
+// Got approval from office hours (Max) that this is enough for MS1 submission
 int main(int argc, char *argv[]) {
     
     int numBlocks;
@@ -51,5 +53,9 @@ int main(int argc, char *argv[]) {
     if (writeAllocation.compare("write-back") == 0 && howToWrite.compare("no-write-allocate") == 0) {
         std::cerr << "write-back and no-write-allocate were both specified";
         return 2;
+    }
+    //logbase2
+    if () {
+
     }
 }
