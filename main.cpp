@@ -54,7 +54,7 @@ int main(int argc, char *argv[]) {
         std::cerr << "write-back and no-write-allocate were both specified";
         return 2;
     }
-    //logbase2
+    //when logbase2(numSets) + logbase2(numBlocks) > 32 (error case)
     if () {
 
     }
