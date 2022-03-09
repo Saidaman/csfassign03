@@ -85,7 +85,7 @@ int errorCheck(int numBlocks, int numSets, int numBytes, std::string writeAlloca
 
     if (log2NumSetsRes + log2NumBlocksRes > 32)
     {
-        std::cerr << "numSets and numBlocks exceed 32 bits"; // confirm error case
+        std::cerr << "address size exceeds 32 bits"; 
         return 2;
     }
     return 0;
