@@ -44,9 +44,9 @@ int main(int argc, char *argv[]) {
         std::cerr << "number of sets is not a power of 2";
         return 2;
     }
-    //when numBlocks is less than 4
-    if (numBlocks < 4) {
-        std::cerr << "block size is less than 4";
+    //when numBytes is less than 4
+    if (numBytes < 4) {
+        std::cerr << "less than 4 bytes";
         return 2;
     }
     //when write-back and no-write-allocate were both specified
