@@ -8,6 +8,7 @@
  * shossa11@jhu.edu, searla1@jhu.edu
  */
 
+int errorCheck(int numBlocks, int numSets, int numBytes, std::string writeAllocation, std::string howToWrite);
 
 // Got approval from office hours (Max) that this is enough for MS1 submission
 int main(int argc, char *argv[]) {
@@ -34,7 +35,7 @@ int main(int argc, char *argv[]) {
     }
 
     //run input error checking
-    int errors = errorCheck(numSets, numBlocks, numBytes, writeAllocation, howToWrite);
+    int errors = errorCheck(numBlocks, numSets, numBytes, writeAllocation, howToWrite);
     if (errors == 2) { //errorCheck() returned with errors
         return 2;
     }
