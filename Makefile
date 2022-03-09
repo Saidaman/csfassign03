@@ -5,13 +5,13 @@
 CXX = g++
 CXXFLAGS = -g -Wall -Wextra -pedantic 
 
-LDFLAGS = -no-pie
+LDFLAGS =
 
 %.o : %.c
-	gcc $(CXXFLAGS) -cpp $<
+	$(CXX) $(CXXFLAGS) -cpp $<
 
 csim : main.o #add others?
-	gcc -o $@ $(LDFLAGS) main.o
+	$(CXX) -o $@ $(LDFLAGS) main.o
 
 solution.zip :
 	rm -f solution.zip
