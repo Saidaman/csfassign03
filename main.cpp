@@ -55,7 +55,21 @@ int main(int argc, char *argv[]) {
         return 2;
     }
     //when logbase2(numSets) + logbase2(numBlocks) > 32 (error case)
-    if () {
+    int log2NumSets = numSets;
+    int log2NumSetsRes = 0;
+    int log2NumBlocks = numBlocks;
+    int log2NumBlocksRes = 0;
+    while (log2NumSets != 0) {
+        log2NumSets >>= 1;
+        log2NumSetsRes++;
+    }
+    while (log2NumBlocks != 0) {
+        log2NumBlocks >>= 1;
+        log2NumBlocksRes++;
+    }
 
+    if (log2NumSetsRes + log2NumBlocksRes > 32) {
+        std::cerr << "numSets and numBlocks exceed 32 bits"; //confirm error case
+        return 2;
     }
 }
