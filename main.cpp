@@ -39,6 +39,17 @@ int main(int argc, char *argv[]) {
     if (errors == 2) { //errorCheck() returned with errors
         return 2;
     }
+
+    std::string performField;
+    while (std::cin >> performField) { //or endof
+
+        int address = 0;
+        std::cin >> std::hex >> address;
+        int garbageVal = 0;
+        std::cin >> garbageVal;
+
+        //still need to do caching stuff
+    }
 }
 
 //This is a helper method to validate the input by checking for error cases in the input parameter collection
