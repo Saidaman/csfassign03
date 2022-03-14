@@ -46,9 +46,9 @@ int main(int argc, char *argv[]) {
     std::string performField;
     while (std::cin >> performField) { //or endof
 
-        int address = 0;
-        std::cin >> std::hex >> address;
-        int garbageVal = 0;
+        int address;
+        std::cin >> address; //std::hex >>
+        int garbageVal;
         std::cin >> garbageVal;
 
         //still need to do caching stuff
