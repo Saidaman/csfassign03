@@ -9,10 +9,11 @@
  */
 
 int errorCheck(int numBlocks, int numSets, int numBytes, std::string writeAllocation, std::string howToWrite);
+void printOutput(int counts[]);
 
-// Got approval from office hours (Max) that this is enough for MS1 submission
-int main(int argc, char *argv[]) {
-    
+    // Got approval from office hours (Max) that this is enough for MS1 submission
+    int main(int argc, char *argv[]) {
+
     int numBlocks;
     int numSets;
     int numBytes;
@@ -61,13 +62,18 @@ int main(int argc, char *argv[]) {
         }
     }
     //printing output
-    printf("Total loads: %d \n", counts[0]);
-    printf("Total stores: %d \n", counts[1]);
-    printf("Load hits: %d \n", counts[2]);
-    printf("Load misses: %d \n", counts[3]);
-    printf("Store hits: %d \n", counts[4]);
-    printf("Store misses: %d \n", counts[5]);
-    printf("Total cycles: %d \n", counts[6]);
+    printOutput(counts);
+}
+
+//this is the helper method to print all the output at the end of main
+void printOutput(int counts[]) {
+    printf("Total loads: %d\n", counts[0]);
+    printf("Total stores: %d\n", counts[1]);
+    printf("Load hits: %d\n", counts[2]);
+    printf("Load misses: %d\n", counts[3]);
+    printf("Store hits: %d\n", counts[4]);
+    printf("Store misses: %d\n", counts[5]);
+    printf("Total cycles: %d\n", counts[6]);
 }
 
 //This is a helper method to validate the input by checking for error cases in the input parameter collection
