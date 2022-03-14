@@ -19,9 +19,13 @@ int main(int argc, char *argv[]) {
     std::string writeAllocation;
     std::string howToWrite;
     std::string eviction;
+    //array of all the counts that we need to output
+    int counts[7]; // counts[0] -> total loads, counts[1] -> total stores, counts[2] -> load hits
+    // counts[3] -> load misses, counts[4] -> store hits, counts[5] -> store misses, counts[6] -> total cycles
 
     //checking for command-line input
-    if(argc == 7) {
+    if (argc == 7)
+    {
         numSets = std::stoi(argv[1]); //turns type char into an int
         numBlocks = std::stoi(argv[2]);
         numBytes = std::stoi(argv[3]);
@@ -49,7 +53,22 @@ int main(int argc, char *argv[]) {
         std::cin >> garbageVal;
 
         //still need to do caching stuff
+        //couunts loads and stores
+        if (performField.compare("l") == 0) {
+            counts[0]++;
+        }
+        else if (performField.compare("s") == 0) {
+            counts[1]++;
+        }
     }
+    //printing output
+    printf("Total loads: %d \n", counts[0]);
+    printf("Total stores: %d \n", counts[1]);
+    printf("Load hits: %d \n", counts[2]);
+    printf("Load misses: %d \n", counts[3]);
+    printf("Store hits: %d \n", counts[4]);
+    printf("Store misses: %d \n", counts[5]);
+    printf("Total cycles: %d \n", counts[6]);
 }
 
 //This is a helper method to validate the input by checking for error cases in the input parameter collection
