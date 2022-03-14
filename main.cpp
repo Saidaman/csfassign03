@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     std::string howToWrite;
     std::string eviction;
     //array of all the counts that we need to output
-    int counts[7]; // counts[0] -> total loads, counts[1] -> total stores, counts[2] -> load hits
+    int counts[7] = {0}; // counts[0] -> total loads, counts[1] -> total stores, counts[2] -> load hits
     // counts[3] -> load misses, counts[4] -> store hits, counts[5] -> store misses, counts[6] -> total cycles
 
     //checking for command-line input
@@ -74,13 +74,13 @@ int main(int argc, char *argv[]) {
 int errorCheck(int numBlocks, int numSets, int numBytes, std::string writeAllocation, std::string howToWrite) {
     // command line input error-checking
     // when numBlocks is not a power of 2: https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
-    if ((numBlocks != 0) && ((numBlocks & (numBlocks - 1)) == 0))
+    if ((numBlocks == 0) || ((numBlocks & (numBlocks - 1)) != 0))
     {
         std::cerr << "block size is not a power of 2";
         return 2;
     }
     // when numSets is not a power of 2
-    if ((numSets != 0) && ((numSets & (numSets - 1)) == 0))
+    if ((numSets == 0) || ((numSets & (numSets - 1)) != 0))
     {
         std::cerr << "number of sets is not a power of 2";
         return 2;
