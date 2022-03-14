@@ -35,8 +35,7 @@ int main(int argc, char *argv[]) {
     }
 
     //run input error checking
-    int errors = errorCheck(numBlocks, numSets, numBytes, writeAllocation, howToWrite);
-    if (errors == 2) { //errorCheck() returned with errors
+    if (errorCheck(numBlocks, numSets, numBytes, writeAllocation, howToWrite)) { //errorCheck() returned with errors
         return 2;
     }
 
