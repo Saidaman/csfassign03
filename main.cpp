@@ -37,6 +37,12 @@ class Slot {
     int counts[7] = {0}; // counts[0] -> total loads, counts[1] -> total stores, counts[2] -> load hits
     // counts[3] -> load misses, counts[4] -> store hits, counts[5] -> store misses, counts[6] -> total cycles
 
+    map cashe[numSets];
+    for (i= 0, i < cashe.size(); i++) {
+        cashe[i] = new vector[numBlocks];
+    }
+
+
     //checking for command-line input
     if (argc == 7)
     {
