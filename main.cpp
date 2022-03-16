@@ -24,7 +24,6 @@ class Slot {
     unsigned access_ts; //timestamp for LRU
 };
 
-    // Got approval from office hours (Max) that this is enough for MS1 submission
     int main(int argc, char *argv[]) {
 
     int numSets;
@@ -72,6 +71,10 @@ class Slot {
         std::cin >> garbageVal;
 
         //still need to do caching stuff
+        int offsetNumBits = logBase2(numBytes);
+        int indexNumBits = logBase2(numSets);
+        int tagNumBits = 32 - offsetNumBits - indexNumBits;
+
         //couunts loads and stores
         if (performField.compare("l") == 0) {
             counts[0]++;
@@ -93,7 +96,7 @@ int logBase2(int num) {
     return res;
 }
 
-int isPowerOfTwo(int num) {
+int isPowerOfTwo(int num) { //https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
     return ((num != 0) && ((num & (num - 1)) == 0));
 }
 
@@ -111,7 +114,7 @@ void printOutput(int counts[]) {
 //This is a helper method to validate the input by checking for error cases in the input parameter collection
 int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAllocation, std::string howToWrite) {
     // command line input error-checking
-    // when numSets is not a power of 2: https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
+    // when numSets is not a power of 2
     if (!isPowerOfTwo(numSets)) {
         std::cerr << "number of sets is not a power of 2\n";
         return 2;
