@@ -53,10 +53,10 @@ int main(int argc, char *argv[]) {
 	// initialize the cache: key = index, vector of blocks = sets
 	std::map<unsigned, std::vector<Block>> cache;
 	// initialize the iterator for the map cache
-	std::map<unsigned, std::vector<Block>>::iterator it;
+	std::map<unsigned, std::vector<Block>>::iterator setIterator;
 
-		// checking for command-line input
-		if (argc == 7)
+	// checking for command-line input
+	if (argc == 7)
 	{
 		numSets = std::stoi(argv[1]); //turns type char into an int
 		numBlocks = std::stoi(argv[2]);
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 		//we left shift 1 so it can have logBase2(numBytes) number of trailing zeros.
 		//Then, we subtract 1 so that we can have a binary number with
 		//logBase2(numBytes) number of bits of just 1s. We later use this result
-		//with the & operator to isolate those bits in the address.
+		//with the & operator to isolate the respective bits in the address.
 		unsigned offsetBits = (1 << numOffsetBits) - 1;
 		//similar approach as above   
 		unsigned indexBits = (1 << numIndexBits) - 1;
@@ -104,11 +104,21 @@ int main(int argc, char *argv[]) {
 		unsigned tag = address >> numIndexBits;
 
 		Block currBlock(offset, index, tag, false, false, 0, 0);
-		it = cache.find(currBlock.index);
-		//if the index doesn't currently exist
-		if (it != cache.end())
 
-		//couunts loads and stores
+		if (performField.compare("s") == 0) {
+			currBlock.dirty = true;
+		}
+			
+		setIterator = cache.find(currBlock.index);
+		//if the index doesn't currently exist
+		if (setIterator == cache.end()) {
+			std::vector<Block> currSet;
+			std::vector<Block>::iterator blockIterator = currSet.begin();
+			currSet.insert(blockIterator, currBlock);
+			cache.insert(std::pair<unsigned, std::vector<Block>>(index, currSet));
+		}
+
+		// counts loads and stores
 		if (performField.compare("l") == 0) {
 			counts[0]++;
 		} else if (performField.compare("s") == 0) {
