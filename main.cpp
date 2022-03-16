@@ -8,14 +8,27 @@
  * shossa11@jhu.edu, searla1@jhu.edu
  */
 
-int errorCheck(int numBlocks, int numSets, int numBytes, std::string writeAllocation, std::string howToWrite);
+//TODO: add javadoc comments for these?
+int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAllocation, std::string howToWrite);
 void printOutput(int counts[]);
+int logBase2(int num);
+int isPowerOfTwo(int num);
+
+class Slot {
+    unsigned tag;
+    unsigned index;
+    unsigned offset;
+    bool valid;
+    bool dirty;
+    unsigned load_ts; //timestamp for FIFO
+    unsigned access_ts; //timestamp for LRU
+};
 
     // Got approval from office hours (Max) that this is enough for MS1 submission
     int main(int argc, char *argv[]) {
 
-    int numBlocks;
     int numSets;
+    int numBlocks;
     int numBytes;
     std::string writeAllocation;
     std::string howToWrite;
@@ -40,7 +53,7 @@ void printOutput(int counts[]);
     }
 
     //run input error checking
-    if (errorCheck(numBlocks, numSets, numBytes, writeAllocation, howToWrite)) { //errorCheck() returned with errors
+    if (errorCheck(numSets, numBlocks, numBytes, writeAllocation, howToWrite)) { //errorCheck() returned with errors
         return 2;
     }
 
@@ -65,6 +78,19 @@ void printOutput(int counts[]);
     printOutput(counts);
 }
 
+int logBase2(int num) {
+    int res = 0;
+    while (num != 0) {
+        num >>= 1;
+        res++;
+    }
+    return res;
+}
+
+int isPowerOfTwo(int num) {
+    return ((num != 0) && ((num & (num - 1)) == 0));
+}
+
 //this is the helper method to print all the output at the end of main
 void printOutput(int counts[]) {
     printf("Total loads: %d\n", counts[0]);
@@ -77,51 +103,38 @@ void printOutput(int counts[]) {
 }
 
 //This is a helper method to validate the input by checking for error cases in the input parameter collection
-int errorCheck(int numBlocks, int numSets, int numBytes, std::string writeAllocation, std::string howToWrite) {
+int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAllocation, std::string howToWrite) {
     // command line input error-checking
-    // when numBlocks is not a power of 2: https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
-    if ((numBlocks == 0) || ((numBlocks & (numBlocks - 1)) != 0))
-    {
-        std::cerr << "block size is not a power of 2";
+    // when numSets is not a power of 2: https://stackoverflow.com/questions/600293/how-to-check-if-a-number-is-a-power-of-2
+    if (!isPowerOfTwo(numSets)) {
+        std::cerr << "number of sets is not a power of 2\n";
         return 2;
     }
-    // when numSets is not a power of 2
-    if ((numSets == 0) || ((numSets & (numSets - 1)) != 0))
-    {
-        std::cerr << "number of sets is not a power of 2";
+    // when numBlocks is not a power of 2
+    if (!isPowerOfTwo(numBlocks)) {
+        std::cerr << "block size is not a power of 2\n";
+        return 2;
+    }
+    //when numBytes is not a power of 2
+    if (!isPowerOfTwo(numBytes)) {
+        std::cerr << "number of bytes is not a power of 2\n";
         return 2;
     }
     // when numBytes is less than 4
     if (numBytes < 4)
     {
-        std::cerr << "less than 4 bytes";
+        std::cerr << "number of bytes indicated is less than 4 bytes\n";
         return 2;
     }
     // when write-back and no-write-allocate were both specified
     if (writeAllocation.compare("write-back") == 0 && howToWrite.compare("no-write-allocate") == 0)
     { // can you use .compare() with string literals
-        std::cerr << "write-back and no-write-allocate were both specified";
+        std::cerr << "write-back and no-write-allocate were both specified\n";
         return 2;
     }
     // when logbase2(numSets) + logbase2(numBlocks) > 32 (error case)
-    int log2NumSets = numSets;
-    int log2NumSetsRes = 0;
-    int log2NumBlocks = numBlocks;
-    int log2NumBlocksRes = 0;
-    while (log2NumSets != 0)
-    {
-        log2NumSets >>= 1;
-        log2NumSetsRes++;
-    }
-    while (log2NumBlocks != 0)
-    {
-        log2NumBlocks >>= 1;
-        log2NumBlocksRes++;
-    }
-
-    if (log2NumSetsRes + log2NumBlocksRes > 32)
-    {
-        std::cerr << "address size exceeds 32 bits"; 
+    if (logBase2(numSets) + logBase2(numBlocks) > 32) {
+        std::cerr << "address size exceeds 32 bits\n"; 
         return 2;
     }
     return 0;
