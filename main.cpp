@@ -51,17 +51,22 @@ int main(int argc, char *argv[]) {
 	// counts[3] -> load misses, counts[4] -> store hits, counts[5] -> store misses, counts[6] -> total cycles
 
 	// initialize the cache: key = index, vector of blocks = sets
-	std::map <unsigned, std::vector<Block>> cache;
-	
-	//checking for command-line input
-	if (argc == 7) {
+	std::map<unsigned, std::vector<Block>> cache;
+	// initialize the iterator for the map cache
+	std::map<unsigned, std::vector<Block>>::iterator it;
+
+		// checking for command-line input
+		if (argc == 7)
+	{
 		numSets = std::stoi(argv[1]); //turns type char into an int
 		numBlocks = std::stoi(argv[2]);
 		numBytes = std::stoi(argv[3]);
 		writeAllocation = argv[4];
 		howToWrite = argv[5];
 		eviction = argv[6];
-	} else { //if there are not 6 other parameters passed in from command line other than ./csim
+	}
+	else
+	{ // if there are not 6 other parameters passed in from command line other than ./csim
 		std::cerr << "Not enough parameters passed in through command line\n";
 		return 1;
 	}
@@ -99,7 +104,9 @@ int main(int argc, char *argv[]) {
 		unsigned tag = address >> numIndexBits;
 
 		Block currBlock(offset, index, tag, false, false, 0, 0);
-		
+		it = cache.find(currBlock.index);
+		//if the index doesn't currently exist
+		if (it != cache.end())
 
 		//couunts loads and stores
 		if (performField.compare("l") == 0) {
