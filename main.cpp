@@ -26,16 +26,7 @@ class Block {
 		unsigned load_ts; //timestamp for FIFO
 		unsigned access_ts; //timestamp for LRU
 
-	public:
-		Block() {
-			offset = 0;
-			index = 0;
-			tag = 0;
-			valid = false;
-			dirty = false;
-			load_ts = 0;
-			access_ts = 0;
-		}
+		Block() :  offset(0), index(0), tag(0), valid(false), dirty(false), load_ts(0), access_ts(0) { } //default constructor
 
 	public:
 		//parameterized constructor
@@ -86,7 +77,7 @@ int main(int argc, char *argv[]) {
 	std::vector<std::vector<Block>> cache; //cache
 	for (int i = 0; i < numSets; i++) {
 		for (int j = 0; j < numBlocks; j++) {
-			cache[i][j] = new Block(); //initialized with default constructor
+			cache[i][j].push_back(new Block()); //initialized with default constructor
 		}
 	}
 
