@@ -10,14 +10,6 @@
  * shossa11@jhu.edu, searla1@jhu.edu
  */
 
-//TODO: add javadoc comments for these?
-int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAllocation, std::string howToWrite);
-void printOutput(int counts[]);
-int logBase2(int num);
-int isPowerOfTwo(int num);
-void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int counts[], std::string perform, std::string eviction);
-void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks);
-
 class Block
 {
 public: //shuold these be public?
@@ -54,6 +46,14 @@ public:
 		this->access_ts = access_ts;
 	}
 };
+
+//TODO: add javadoc comments for these?
+int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAllocation, std::string howToWrite);
+void printOutput(int counts[]);
+int logBase2(int num);
+int isPowerOfTwo(int num);
+void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int counts[], std::string perform, std::string eviction);
+void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks);
 
 int main(int argc, char *argv[]) {
 
@@ -116,15 +116,13 @@ int main(int argc, char *argv[]) {
 		//logBase2(numBytes) number of bits of just 1s. We later use this result
 		//with the & operator to isolate the respective bits in the address.
 		unsigned offsetBits = (1 << numOffsetBits) - 1;
-		//similar approach as above   
-		unsigned indexBits = (1 << numIndexBits) - 1;
 		//similar approach as above
-		unsigned tagBits = (1 << (32 - numOffsetBits - numIndexBits)) - 1;
-		
+		unsigned indexBits = (1 << numIndexBits) - 1;
+
 		unsigned offset = address & offsetBits;
 		address >>= numOffsetBits;
 		unsigned index = address & indexBits;
-		unsigned tag = address >> numIndexBits;
+		unsigned tag = address >> numIndexBits; //tag value is whatever's left
 
 		Block currBlock(offset, index, tag, true, false, 0, lruCounter); //TODO: are these variables referring to our Block class's data fields since those are public?
 
