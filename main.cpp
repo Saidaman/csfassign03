@@ -2,6 +2,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <climits>
 
 /*
  * Implementation of a cache simulator program in C++.
