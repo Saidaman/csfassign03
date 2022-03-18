@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
 		bool foundSpot = false;
 		for (int i = 0; i < numBlocks; i++)
 		{
-			if (!cache[index][i].valid) //miss (down)
+			if (!cache[index][i].valid || currBlock.dirty != cache[index][i].dirty) //miss (down)
 			{ //the first block that's encountered that is invalid/empty, we place given block
 				//cache[index][i] = currBlock;
 				cache[index][i].tag = currBlock.tag;
