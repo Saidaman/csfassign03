@@ -17,7 +17,7 @@ int logBase2(int num);
 int isPowerOfTwo(int num);
 
 class Block {
-	public: //get/set
+	public: //shuold these be public?
 		unsigned offset;
 		unsigned index;
 		unsigned tag;
@@ -27,6 +27,18 @@ class Block {
 		unsigned access_ts; //timestamp for LRU
 
 	public:
+		Block() {
+			offset = 0;
+			index = 0;
+			tag = 0
+			valid = false;
+			dirty = false;
+			load_ts = 0;
+			access_ts = 0;
+		}
+
+	public:
+		//parameterized constructor
 		Block(unsigned offset, unsigned index, unsigned tag, bool valid, bool dirty, unsigned load_ts, unsigned access_ts) {
 			this->offset = offset;
 			this->index = index;
@@ -50,10 +62,12 @@ int main(int argc, char *argv[]) {
 	int counts[7] = {0}; // counts[0] -> total loads, counts[1] -> total stores, counts[2] -> load hits
 	// counts[3] -> load misses, counts[4] -> store hits, counts[5] -> store misses, counts[6] -> total cycles
 
-	// initialize the cache: key = index, vector of blocks = sets
-	std::map<unsigned, std::vector<Block>> cache;
-	// initialize the iterator for the map cache
-	std::map<unsigned, std::vector<Block>>::iterator setIterator;
+	std::vector<std::vector<Block>> cache; //cache
+	for (int i = 0; i < numSets; i++) {
+		for (j = 0; j < numBlocks; j++) {
+			cache[i][j] = new Block(); //initialized with default constructor
+		}
+	}
 
 	// checking for command-line input
 	if (argc == 7)
@@ -103,20 +117,13 @@ int main(int argc, char *argv[]) {
 		unsigned index = address & indexBits;
 		unsigned tag = address >> numIndexBits;
 
-		Block currBlock(offset, index, tag, false, false, 0, 0);
+		Block currBlock(offset, index, tag, false, false, 0, 0); //TODO: are these variables referring to our Block class's data fields since those are public?
 
 		if (performField.compare("s") == 0) {
 			currBlock.dirty = true;
 		}
-			
-		setIterator = cache.find(currBlock.index);
-		//if the index doesn't currently exist
-		if (setIterator == cache.end()) {
-			std::vector<Block> currSet;
-			std::vector<Block>::iterator blockIterator = currSet.begin();
-			currSet.insert(blockIterator, currBlock);
-			cache.insert(std::pair<unsigned, std::vector<Block>>(index, currSet));
-		}
+		
+		placeBlockInCache(cache[index], numBlocks, currBlock, counts);
 
 		// counts loads and stores
 		if (performField.compare("l") == 0) {
@@ -125,8 +132,25 @@ int main(int argc, char *argv[]) {
 			counts[1]++;
 		}
 	}
+
+	//at this point, because of the placeBlockInCache method, we know load and store hits OR misses, not both. To find the other, we simply subtract the known value from total loads and total stores in the counts array
+	counts[] = counts[] - counts[]; //TODO: fill in index values in the "[]" after understanding
+	counts[] = counts[] - counts[]; //TODO: fill in index values in the "[]" after understanding
 	//printing output
 	printOutput(counts);
+}
+
+void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int[] counts) { //we're looking at a nested vector in our big cache vector (set), gotten from index
+	for (int i = 0; i < numBlocks; i++) {
+		if (!givenSet[i].valid) { //the first block that's encountered that is invalid, we place given block
+			givenSet[i] = placeBlock; //TODO: what if the set is full? (i.e. all blocks are valid. Then, we aren't inside this if-statement)
+			if (i == 0) { //means data miss since this set didn't exist before (because the first element in the nested vector (set) is an invalid block)
+				counts[]++; //TODO: STORE or LOAD miss? place respective index value in the array's "[]"
+			} else { //data hit
+				counts[]++; //TODO: STORE or LOAD hit? place respective index value in the array's "[]"
+			}
+		}
+	}
 }
 
 int logBase2(int num) {
