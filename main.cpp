@@ -201,7 +201,7 @@ void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks)
 }
 
 int logBase2(int num) {
-	int res = 0;
+	int res = -1;
 	while (num != 0) {
 		num >>= 1;
 		res++;
