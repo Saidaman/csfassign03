@@ -30,7 +30,7 @@ class Block {
 		Block() {
 			offset = 0;
 			index = 0;
-			tag = 0
+			tag = 0;
 			valid = false;
 			dirty = false;
 			load_ts = 0;
@@ -62,13 +62,6 @@ int main(int argc, char *argv[]) {
 	int counts[7] = {0}; // counts[0] -> total loads, counts[1] -> total stores, counts[2] -> load hits
 	// counts[3] -> load misses, counts[4] -> store hits, counts[5] -> store misses, counts[6] -> total cycles
 
-	std::vector<std::vector<Block>> cache; //cache
-	for (int i = 0; i < numSets; i++) {
-		for (j = 0; j < numBlocks; j++) {
-			cache[i][j] = new Block(); //initialized with default constructor
-		}
-	}
-
 	// checking for command-line input
 	if (argc == 7)
 	{
@@ -88,6 +81,13 @@ int main(int argc, char *argv[]) {
 	//run input error checking
 	if (errorCheck(numSets, numBlocks, numBytes, writeAllocation, howToWrite)) { //errorCheck() returned with errors
 		return 2;
+	}
+
+	std::vector<std::vector<Block>> cache; //cache
+	for (int i = 0; i < numSets; i++) {
+		for (int j = 0; j < numBlocks; j++) {
+			cache[i][j] = new Block(); //initialized with default constructor
+		}
 	}
 
 	std::string performField;
