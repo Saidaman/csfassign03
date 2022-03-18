@@ -196,7 +196,7 @@ void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks)
 		}
 	}
 	givenSet[idx] = placeBlock; 
-	//Need to check if the block was dirty and increment cycle count accordingly etc.
+	//Need to check if the block was dirty and increment cycle count accordingly etc
 }
 
 int logBase2(int num) {
