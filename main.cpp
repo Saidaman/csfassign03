@@ -15,39 +15,44 @@ int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAlloca
 void printOutput(int counts[]);
 int logBase2(int num);
 int isPowerOfTwo(int num);
+void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int counts[], std::string perform, std::string eviction);
+void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks);
 
-class Block {
-	public: //shuold these be public?
-		unsigned offset;
-		unsigned index;
-		unsigned tag;
-		bool valid;
-		bool dirty;
-		unsigned load_ts; //timestamp for FIFO
-		unsigned access_ts; //timestamp for LRU
+class Block
+{
+public: //shuold these be public?
+	unsigned offset;
+	unsigned index;
+	unsigned tag;
+	bool valid;
+	bool dirty;
+	unsigned load_ts;	//timestamp for FIFO
+	unsigned access_ts; //timestamp for LRU
 
-	public:
-		Block() {
-			offset = 0;
-			index = 0;
-			tag = 0;
-			valid = false;
-			dirty = false;
-			load_ts = 0;
-			access_ts = 0;
-		}
+public:
+	Block()
+	{
+		offset = 0;
+		index = 0;
+		tag = 0;
+		valid = false;
+		dirty = false;
+		load_ts = 0;
+		access_ts = INT_MAX; //for implementation of lru
+	}
 
-	public:
-		//parameterized constructor
-		Block(unsigned offset, unsigned index, unsigned tag, bool valid, bool dirty, unsigned load_ts, unsigned access_ts) {
-			this->offset = offset;
-			this->index = index;
-			this->tag = tag;
-			this->valid = valid;
-			this->dirty = dirty;
-			this->load_ts = load_ts;
-			this->access_ts = access_ts;
-		}
+public:
+	//parameterized constructor
+	Block(unsigned offset, unsigned index, unsigned tag, bool valid, bool dirty, unsigned load_ts, unsigned access_ts)
+	{
+		this->offset = offset;
+		this->index = index;
+		this->tag = tag;
+		this->valid = valid;
+		this->dirty = dirty;
+		this->load_ts = load_ts;
+		this->access_ts = access_ts;
+	}
 };
 
 int main(int argc, char *argv[]) {
@@ -61,6 +66,7 @@ int main(int argc, char *argv[]) {
 	//array of all the counts that we need to output
 	int counts[7] = {0}; // counts[0] -> total loads, counts[1] -> total stores, counts[2] -> load hits
 	// counts[3] -> load misses, counts[4] -> store hits, counts[5] -> store misses, counts[6] -> total cycles
+	int lruCounter = 0; //"global" counter for lru
 
 	// checking for command-line input
 	if (argc == 7)
@@ -83,10 +89,11 @@ int main(int argc, char *argv[]) {
 		return 2;
 	}
 
-	std::vector<std::vector<Block>> cache; //cache
+	//initializing the cache
+	std::vector<std::vector<Block> > cache(numSets, std::vector<Block>(numBlocks));
 	for (int i = 0; i < numSets; i++) {
 		for (int j = 0; j < numBlocks; j++) {
-			cache[i][j] = new Block(); //initialized with default constructor
+			cache[i][j] = Block(); //initialized with default constructor
 		}
 	}
 
@@ -97,6 +104,8 @@ int main(int argc, char *argv[]) {
 		std::cin >> std::hex >> address;
 		int garbageVal;
 		std::cin >> garbageVal;
+
+		lruCounter++;
 
 		int numOffsetBits = logBase2(numBytes);
 		int numIndexBits = logBase2(numSets);
@@ -117,13 +126,13 @@ int main(int argc, char *argv[]) {
 		unsigned index = address & indexBits;
 		unsigned tag = address >> numIndexBits;
 
-		Block currBlock(offset, index, tag, false, false, 0, 0); //TODO: are these variables referring to our Block class's data fields since those are public?
+		Block currBlock(offset, index, tag, true, false, 0, lruCounter); //TODO: are these variables referring to our Block class's data fields since those are public?
 
 		if (performField.compare("s") == 0) {
 			currBlock.dirty = true;
 		}
 		
-		placeBlockInCache(cache[index], numBlocks, currBlock, counts);
+		placeBlockInCache(cache[index], numBlocks, currBlock, counts, performField, eviction);
 
 		// counts loads and stores
 		if (performField.compare("l") == 0) {
@@ -134,23 +143,60 @@ int main(int argc, char *argv[]) {
 	}
 
 	//at this point, because of the placeBlockInCache method, we know load and store hits OR misses, not both. To find the other, we simply subtract the known value from total loads and total stores in the counts array
-	counts[] = counts[] - counts[]; //TODO: fill in index values in the "[]" after understanding
-	counts[] = counts[] - counts[]; //TODO: fill in index values in the "[]" after understanding
+	//counts[] = counts[] - counts[]; //TODO: fill in index values in the "[]" after understanding
+	//counts[] = counts[] - counts[]; //TODO: fill in index values in the "[]" after understanding
 	//printing output
 	printOutput(counts);
 }
 
-void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int[] counts) { //we're looking at a nested vector in our big cache vector (set), gotten from index
+void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int counts[], std::string perform, std::string eviction) { //we're looking at a nested vector in our big cache vector (set), gotten from index
+	bool foundSpot = false;
 	for (int i = 0; i < numBlocks; i++) {
-		if (!givenSet[i].valid) { //the first block that's encountered that is invalid, we place given block
-			givenSet[i] = placeBlock; //TODO: what if the set is full? (i.e. all blocks are valid. Then, we aren't inside this if-statement)
-			if (i == 0) { //means data miss since this set didn't exist before (because the first element in the nested vector (set) is an invalid block)
-				counts[]++; //TODO: STORE or LOAD miss? place respective index value in the array's "[]"
-			} else { //data hit
-				counts[]++; //TODO: STORE or LOAD hit? place respective index value in the array's "[]"
+		if (!givenSet[i].valid) { //the first block that's encountered that is invalid/empty, we place given block
+			givenSet[i] = placeBlock;
+			foundSpot = true;
+			if (perform.compare("l") == 0) {
+				counts[3]++; //increment load miss
+			} else {
+				counts[5]++; //increment store miss
+			}
+		}
+		if ((placeBlock.tag == givenSet[i].tag) && (placeBlock.offset == givenSet[i].offset)) {
+			givenSet[i] = placeBlock;
+			foundSpot = true;
+			if (perform.compare("l") == 0) {
+				counts[2]++; //increment load hit
+			} else {
+				counts[4]++; //increment store hit
 			}
 		}
 	}
+	if (foundSpot) { //this means that we have to evict a block, set is full
+		if (perform.compare("l") == 0) {
+			counts[3]++; //increment load miss
+		}
+		else {
+			counts[5]++; //increment store miss
+		}
+		//need to evict based on lru or fifo
+		if (eviction.compare("lru")) {
+			evictLruBlock(givenSet, placeBlock, numBlocks);
+		}
+		//TODO: Need to implement FIFO (MS3)
+	}
+}
+
+void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks) {
+	unsigned lowest_val = INT_MAX;
+	int idx;
+	for (int i = 0; i < numBlocks; i++) {
+		if (givenSet[i].access_ts < lowest_val) {
+			lowest_val = givenSet[i].access_ts;
+			idx = i;
+		}
+	}
+	givenSet[idx] = placeBlock; 
+	//Need to check if the block was dirty and increment cycle count accordingly etc.
 }
 
 int logBase2(int num) {
