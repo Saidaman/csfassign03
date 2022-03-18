@@ -131,7 +131,55 @@ int main(int argc, char *argv[]) {
 			currBlock.dirty = true;
 		}
 		
-		placeBlockInCache(cache[index], numBlocks, currBlock, counts, performField, eviction);
+		//placeBlockInCache(cache[index], numBlocks, currBlock, counts, performField, eviction);
+
+		bool foundSpot = false;
+		for (int i = 0; i < numBlocks; i++)
+		{
+			if (!cache[index][i].valid)
+			{ //the first block that's encountered that is invalid/empty, we place given block
+				cache[index][i] = currBlock;
+				foundSpot = true;
+				if (performField.compare("l") == 0)
+				{
+					counts[3]++; //increment load miss
+				}
+				else
+				{
+					counts[5]++; //increment store miss
+				}
+			}
+			if ((currBlock.tag == cache[index][i].tag) && (currBlock.offset == cache[index][i].offset))
+			{
+				cache[index][i] = currBlock;
+				foundSpot = true;
+				if (performField.compare("l") == 0)
+				{
+					counts[2]++; //increment load hit
+				}
+				else
+				{
+					counts[4]++; //increment store hit
+				}
+			}
+		}
+		if (foundSpot)
+		{ //this means that we have to evict a block, set is full
+			if (performField.compare("l") == 0)
+			{
+				counts[3]++; //increment load miss
+			}
+			else
+			{
+				counts[5]++; //increment store miss
+			}
+			//need to evict based on lru or fifo
+			if (eviction.compare("lru"))
+			{
+				evictLruBlock(cache[index], currBlock, numBlocks);
+			}
+			//TODO: Need to implement FIFO (MS3)
+		}
 
 		// counts loads and stores
 		if (performField.compare("l") == 0) {
@@ -148,44 +196,44 @@ int main(int argc, char *argv[]) {
 	printOutput(counts);
 }
 
-void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int counts[], std::string perform, std::string eviction) { //we're looking at a nested vector in our big cache vector (set), gotten from index
-	bool foundSpot = false;
-	for (int i = 0; i < numBlocks; i++) {
-		if (!givenSet[i].valid) { //the first block that's encountered that is invalid/empty, we place given block
-			givenSet[i] = placeBlock;
-			foundSpot = true;
-			if (perform.compare("l") == 0) {
-				counts[3]++; //increment load miss
-			} else {
-				counts[5]++; //increment store miss
-			}
-			break;
-		}
-		if ((placeBlock.tag == givenSet[i].tag) && (placeBlock.offset == givenSet[i].offset)) {
-			givenSet[i] = placeBlock;
-			foundSpot = true;
-			if (perform.compare("l") == 0) {
-				counts[2]++; //increment load hit
-			} else {
-				counts[4]++; //increment store hit
-			}
-			break;
-		}
-	}
-	if (!foundSpot) { //this means that we have to evict a block, set is full
-		if (perform.compare("l") == 0) {
-			counts[3]++; //increment load miss
-		}
-		else {
-			counts[5]++; //increment store miss
-		}
-		//need to evict based on lru or fifo
-		if (eviction.compare("lru")) {
-			evictLruBlock(givenSet, placeBlock, numBlocks);
-		}
-		//TODO: Need to implement FIFO (MS3)
-	}
-}
+// void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int counts[], std::string perform, std::string eviction) { //we're looking at a nested vector in our big cache vector (set), gotten from index
+// 	bool foundSpot = false;
+// 	for (int i = 0; i < numBlocks; i++) {
+// 		if (!givenSet[i].valid) { //the first block that's encountered that is invalid/empty, we place given block
+// 			givenSet[i] = placeBlock;
+// 			foundSpot = true;
+// 			if (perform.compare("l") == 0) {
+// 				counts[3]++; //increment load miss
+// 			} else {
+// 				counts[5]++; //increment store miss
+// 			}
+// 			break;
+// 		}
+// 		if ((placeBlock.tag == givenSet[i].tag) && (placeBlock.offset == givenSet[i].offset)) {
+// 			givenSet[i] = placeBlock;
+// 			foundSpot = true;
+// 			if (perform.compare("l") == 0) {
+// 				counts[2]++; //increment load hit
+// 			} else {
+// 				counts[4]++; //increment store hit
+// 			}
+// 			break;
+// 		}
+// 	}
+// 	if (!foundSpot) { //this means that we have to evict a block, set is full
+// 		if (perform.compare("l") == 0) {
+// 			counts[3]++; //increment load miss
+// 		}
+// 		else {
+// 			counts[5]++; //increment store miss
+// 		}
+// 		//need to evict based on lru or fifo
+// 		if (eviction.compare("lru")) {
+// 			evictLruBlock(givenSet, placeBlock, numBlocks);
+// 		}
+// 		//TODO: Need to implement FIFO (MS3)
+// 	}
+// }
 
 void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks) {
 	unsigned lowest_val = INT_MAX;
