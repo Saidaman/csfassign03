@@ -136,14 +136,14 @@ int main(int argc, char *argv[]) {
 		bool foundSpot = false;
 		for (int i = 0; i < numBlocks; i++)
 		{
-			if (!cache[index][i].valid)
+			if (!cache[index][i].valid) //miss (down)
 			{ //the first block that's encountered that is invalid/empty, we place given block
 				//cache[index][i] = currBlock;
 				cache[index][i].tag = currBlock.tag;
 				cache[index][i].offset = currBlock.offset;
 				cache[index][i].access_ts = currBlock.access_ts;
 				cache[index][i].dirty = currBlock.dirty;
-				cache[index][i].valid = currBlock.valid;
+				cache[index][i].valid = true;
 				foundSpot = true;
 				if (performField.compare("l") == 0)
 				{
@@ -155,7 +155,7 @@ int main(int argc, char *argv[]) {
 				}
 				break;
 			}
-			if ((currBlock.tag == cache[index][i].tag) && (currBlock.offset == cache[index][i].offset))
+			if (currBlock.tag == cache[index][i].tag) //hit (up)
 			{
 				//cache[index][i] = currBlock;
 				cache[index][i].access_ts = currBlock.access_ts;
