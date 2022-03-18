@@ -159,6 +159,7 @@ void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBl
 			} else {
 				counts[5]++; //increment store miss
 			}
+			break;
 		}
 		if ((placeBlock.tag == givenSet[i].tag) && (placeBlock.offset == givenSet[i].offset)) {
 			givenSet[i] = placeBlock;
@@ -168,9 +169,10 @@ void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBl
 			} else {
 				counts[4]++; //increment store hit
 			}
+			break;
 		}
 	}
-	if (foundSpot) { //this means that we have to evict a block, set is full
+	if (!foundSpot) { //this means that we have to evict a block, set is full
 		if (perform.compare("l") == 0) {
 			counts[3]++; //increment load miss
 		}
