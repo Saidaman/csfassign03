@@ -138,7 +138,12 @@ int main(int argc, char *argv[]) {
 		{
 			if (!cache[index][i].valid)
 			{ //the first block that's encountered that is invalid/empty, we place given block
-				cache[index][i] = currBlock;
+				//cache[index][i] = currBlock;
+				cache[index][i].tag = currBlock.tag;
+				cache[index][i].offset = currBlock.offset;
+				cache[index][i].access_ts = currBlock.access_ts;
+				cache[index][i].dirty = currBlock.dirty;
+				cache[index][i].valid = currBlock.valid;
 				foundSpot = true;
 				if (performField.compare("l") == 0)
 				{
@@ -148,10 +153,12 @@ int main(int argc, char *argv[]) {
 				{
 					counts[5]++; //increment store miss
 				}
+				break;
 			}
 			if ((currBlock.tag == cache[index][i].tag) && (currBlock.offset == cache[index][i].offset))
 			{
-				cache[index][i] = currBlock;
+				//cache[index][i] = currBlock;
+				cache[index][i].access_ts = currBlock.access_ts;
 				foundSpot = true;
 				if (performField.compare("l") == 0)
 				{
@@ -161,9 +168,10 @@ int main(int argc, char *argv[]) {
 				{
 					counts[4]++; //increment store hit
 				}
+				break;
 			}
 		}
-		if (foundSpot)
+		if (!foundSpot)
 		{ //this means that we have to evict a block, set is full
 			if (performField.compare("l") == 0)
 			{
@@ -176,7 +184,19 @@ int main(int argc, char *argv[]) {
 			//need to evict based on lru or fifo
 			if (eviction.compare("lru"))
 			{
-				evictLruBlock(cache[index], currBlock, numBlocks);
+				//evictLruBlock(cache[index], currBlock, numBlocks);
+				unsigned lowest_val = INT_MAX;
+				int idx;
+				for (int i = 0; i < numBlocks; i++) {
+					if (cache[index][i].access_ts < lowest_val) {
+						lowest_val = cache[index][i].access_ts;
+						idx = i;
+					}
+				}
+				cache[index][idx].offset = currBlock.offset;
+				cache[index][idx].tag = currBlock.tag;
+				cache[index][idx].access_ts = currBlock.access_ts;
+				cache[index][idx].dirty = currBlock.dirty;
 			}
 			//TODO: Need to implement FIFO (MS3)
 		}
@@ -235,18 +255,18 @@ int main(int argc, char *argv[]) {
 // 	}
 // }
 
-void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks) {
-	unsigned lowest_val = INT_MAX;
-	int idx;
-	for (int i = 0; i < numBlocks; i++) {
-		if (givenSet[i].access_ts < lowest_val) {
-			lowest_val = givenSet[i].access_ts;
-			idx = i;
-		}
-	}
-	givenSet[idx] = placeBlock; 
-	//Need to check if the block was dirty and increment cycle count accordingly etc
-}
+// void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks) {
+// 	unsigned lowest_val = INT_MAX;
+// 	int idx;
+// 	for (int i = 0; i < numBlocks; i++) {
+// 		if (givenSet[i].access_ts < lowest_val) {
+// 			lowest_val = givenSet[i].access_ts;
+// 			idx = i;
+// 		}
+// 	}
+// 	givenSet[idx] = placeBlock; 
+// 	//Need to check if the block was dirty and increment cycle count accordingly etc
+// }
 
 int logBase2(int num) {
 	int res = -1;
