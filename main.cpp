@@ -119,18 +119,11 @@ int main(int argc, char *argv[]) {
 		unsigned index = address & indexBits;
 		unsigned tag = address >> numIndexBits; //tag value is whatever's left
 
-		Block currBlock(index, tag, true, false, 0, lruCounter); //TODO: are these variables referring to our Block class's data fields since those are public?
-
-		if (performField.compare("s") == 0) {
-			currBlock.dirty = true;
-		}
-		
-		//placeBlockInCache(cache[index], numBlocks, currBlock, counts, performField, eviction);
+		Block currBlock(index, tag, true, false, 0, lruCounter);
 
 		bool alreadyExists = false;
-		// counts loads and stores
 		if (performField.compare("l") == 0) {
-			counts[0]++;
+			counts[0]++; //increment total loads
 			for (int i = 0; i < numBlocks; i++) {
 				if (cache[index][i].tag == currBlock.tag && cache[index][i].valid) {
 					alreadyExists = true;
@@ -141,29 +134,30 @@ int main(int argc, char *argv[]) {
 			}
 			if (!alreadyExists) {
 				counts[3]++; // increment load misses
-				counts[6] += (numBytes / 4) * 100; //increment cycle count
+				counts[6] += numBytes / 4 * 100; //increment cycle count
 				int idx; 
 				for (idx = 0; idx < numBlocks; idx++) {
 					if (!cache[index][idx].valid) {
 						cache[index][idx].tag = currBlock.tag;
-						cache[index][idx].access_ts = currBlock.access_ts;
+						cache[index][idx].access_ts = lruCounter;//currBlock.access_ts;
 						//TODO: Add load_ts for MS3
 						cache[index][idx].dirty = false;
 						cache[index][idx].valid = true;
 						break;
 					}
 				}
-				if (idx == numBlocks) { //meaning we've reached the end of the set
+				if (idx == numBlocks) { //meaning we've reached the end of the set without finding invalid blocks
 					if(eviction.compare("lru") == 0) {
 						unsigned idxToFind;
 						unsigned minVal = INT_MAX;
 						for (int i = 0; i < numBlocks; i++) {
 							if (cache[index][i].access_ts < minVal) {
+								minVal = cache[index][i].access_ts;
 								idxToFind = i;
 							}
 						}
-						if (howToWrite.compare("write-through") != 0 && !cache[index][idxToFind].dirty) {
-							counts[6] += (numBytes / 4) * 100;
+						if (howToWrite.compare("write-through") != 0 && cache[index][idxToFind].dirty) {
+							counts[6] += numBytes / 4 * 100;
 						}
 						//load at min index
 						cache[index][idxToFind].tag = currBlock.tag;
@@ -177,68 +171,78 @@ int main(int argc, char *argv[]) {
 				}
 			}
 		} else if (performField.compare("s") == 0) {
-			counts[1]++;
+			counts[1]++; //increment total stores count
+			for (int i = 0; i < numBlocks; i++) {
+				if (cache[index][i].tag == tag && cache[index][i].valid) {
+					alreadyExists = true;
+					counts[4]++; //increment store hits
+					cache[index][i].access_ts = lruCounter;
+					if (howToWrite.compare("write-through") != 0) {
+						cache[index][i].dirty = true;
+						if (writeAllocation.compare("write-allocate") == 0) {
+							counts[6]++; // increment cycle count
+						} else {
+							counts[6] += 100;
+						}
+					} else {
+						counts[6] += 101;
+					}
+				}
+			}
+			if (!alreadyExists) {
+				counts[5]++; //increment store misses
+				if (writeAllocation.compare("write-allocate") == 0) {
+					if (howToWrite.compare("write-through") == 0) {
+						counts[6] += ((numBytes / 4) * 100) + 100;
+					} else {
+						counts[6] += (numBytes / 4) * 100;
+					}
+					int idx;
+					for (idx = 0; idx < numBlocks; idx++) {
+						if (!cache[index][idx].valid) {
+							cache[index][idx].tag = currBlock.tag;
+							cache[index][idx].access_ts = currBlock.access_ts;
+							//TODO: Add load_ts for MS3
+							cache[index][idx].dirty = false;
+							cache[index][idx].valid = true;
+							break;
+						}
+					}
+					if (idx == numBlocks) { //meaning we've reached the end of the set
+						if(eviction.compare("lru") == 0) {
+						unsigned idxToFind;
+						unsigned minVal = INT_MAX;
+						for (int i = 0; i < numBlocks; i++) {
+							if (cache[index][i].access_ts < minVal) {
+								minVal = cache[index][i].access_ts;
+								idxToFind = i;
+							}
+						}
+						if (howToWrite.compare("write-through") != 0) {
+							if (cache[index][idxToFind].dirty) {
+								counts[6] += numBytes / 4 * 100;
+							}
+						}
+						//store at min index
+						cache[index][idxToFind].tag = currBlock.tag;
+						cache[index][idxToFind].access_ts = currBlock.access_ts;
+						//TODO: Add load_ts for MS3
+						cache[index][idxToFind].dirty = false;
+						cache[index][idxToFind].valid = true;
+						} else {
+						//TODO: fifo for MS3 
+						}
+					}
+				} else {
+					if (howToWrite.compare("write-through") == 0) {
+						counts[6] += 100;					}
+				}
+			}
 		}
 	}
 
-	//at this point, because of the placeBlockInCache method, we know load and store hits OR misses, not both. To find the other, we simply subtract the known value from total loads and total stores in the counts array
-	//counts[] = counts[] - counts[]; //TODO: fill in index values in the "[]" after understanding
-	//counts[] = counts[] - counts[]; //TODO: fill in index values in the "[]" after understanding
-	//printing output
 	printOutput(counts);
 }
-
-// void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int counts[], std::string perform, std::string eviction) { //we're looking at a nested vector in our big cache vector (set), gotten from index
-// 	bool foundSpot = false;
-// 	for (int i = 0; i < numBlocks; i++) {
-// 		if (!givenSet[i].valid) { //the first block that's encountered that is invalid/empty, we place given block
-// 			givenSet[i] = placeBlock;
-// 			foundSpot = true;
-// 			if (perform.compare("l") == 0) {
-// 				counts[3]++; //increment load miss
-// 			} else {
-// 				counts[5]++; //increment store miss
-// 			}
-// 			break;
-// 		}
-// 		if ((placeBlock.tag == givenSet[i].tag) && (placeBlock.offset == givenSet[i].offset)) {
-// 			givenSet[i] = placeBlock;
-// 			foundSpot = true;
-// 			if (perform.compare("l") == 0) {
-// 				counts[2]++; //increment load hit
-// 			} else {
-// 				counts[4]++; //increment store hit
-// 			}
-// 			break;
-// 		}
-// 	}
-// 	if (!foundSpot) { //this means that we have to evict a block, set is full
-// 		if (perform.compare("l") == 0) {
-// 			counts[3]++; //increment load miss
-// 		}
-// 		else {
-// 			counts[5]++; //increment store miss
-// 		}
-// 		//need to evict based on lru or fifo
-// 		if (eviction.compare("lru")) {
-// 			evictLruBlock(givenSet, placeBlock, numBlocks);
-// 		}
-// 		//TODO: Need to implement FIFO (MS3)
-// 	}
-// }
-
-// void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks) {
-// 	unsigned lowest_val = INT_MAX;
-// 	int idx;
-// 	for (int i = 0; i < numBlocks; i++) {
-// 		if (givenSet[i].access_ts < lowest_val) {
-// 			lowest_val = givenSet[i].access_ts;
-// 			idx = i;
-// 		}
-// 	}
-// 	givenSet[idx] = placeBlock; 
-// 	//Need to check if the block was dirty and increment cycle count accordingly etc
-// }
 
 int logBase2(int num) {
 	int res = -1;
@@ -299,69 +303,3 @@ int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAlloca
 	}
 	return 0;
 }
-
-/* 
-
-if (!cache[index][i].valid) //miss (down)
-			{ //the first block that's encountered that is invalid/empty, we place given block
-				//cache[index][i] = currBlock;
-				cache[index][i].tag = currBlock.tag;
-				cache[index][i].access_ts = currBlock.access_ts;
-				cache[index][i].dirty = currBlock.dirty;
-				cache[index][i].valid = true;
-				foundSpot = true;
-				if (performField.compare("l") == 0)
-				{
-					counts[3]++; //increment load miss
-				}
-				else
-				{
-					counts[5]++; //increment store miss
-				}
-				break;
-			}
-			if (currBlock.tag == cache[index][i].tag && cache[index][i].valid) //hit (up)
-			{
-				//cache[index][i] = currBlock;
-				cache[index][i].access_ts = currBlock.access_ts;
-				foundSpot = true;
-				if (performField.compare("l") == 0)
-				{
-					counts[2]++; //increment load hit
-				}
-				else
-				{
-					counts[4]++; //increment store hit
-				}
-				break;
-			}
-if (!foundSpot)
-		{ //this means that we have to evict a block, set is full
-			if (performField.compare("l") == 0)
-			{
-				counts[3]++; //increment load miss
-			}
-			else
-			{
-				counts[5]++; //increment store miss
-			}
-			//need to evict based on lru or fifo
-			if (eviction.compare("lru"))
-			{
-				//evictLruBlock(cache[index], currBlock, numBlocks);
-				unsigned lowest_val = INT_MAX;
-				int idx;
-				for (int i = 0; i < numBlocks; i++) {
-					if (cache[index][i].access_ts < lowest_val) {
-						lowest_val = cache[index][i].access_ts;
-						idx = i;
-					}
-				}
-				cache[index][idx].tag = currBlock.tag;
-				cache[index][idx].access_ts = currBlock.access_ts;
-				cache[index][idx].dirty = currBlock.dirty;
-			}
-			//TODO: Need to implement FIFO (MS3)
-		}
-
-			*/
