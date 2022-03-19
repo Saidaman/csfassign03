@@ -327,3 +327,4 @@ int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAlloca
 	}
 	return 0;
 }
+
