@@ -1,9 +1,3 @@
-#include <iostream>
-#include <string>
-#include <map>
-#include <vector>
-#include <climits>
-
 /*
  * Implementation of a cache simulator program in C++.
  * CSF Assignment 3
@@ -11,9 +5,17 @@
  * shossa11@jhu.edu, searla1@jhu.edu
  */
 
-class Block
-{
-public: //shuold these be public?
+#include <iostream>
+#include <string>
+#include <map>
+#include <vector>
+#include <climits>
+
+/*
+ * A class to represent a block in the cache.
+ */
+class Block {
+public:
 	unsigned index;
 	unsigned tag;
 	bool valid;
@@ -22,8 +24,8 @@ public: //shuold these be public?
 	unsigned access_ts; //timestamp for LRU
 
 public:
-	Block()
-	{
+	//default constructor
+	Block() {
 		index = 0;
 		tag = 0;
 		valid = false;
@@ -34,8 +36,7 @@ public:
 
 public:
 	//parameterized constructor
-	Block(unsigned index, unsigned tag, bool valid, bool dirty, unsigned load_ts, unsigned access_ts)
-	{
+	Block(unsigned index, unsigned tag, bool valid, bool dirty, unsigned load_ts, unsigned access_ts) {
 		this->index = index;
 		this->tag = tag;
 		this->valid = valid;
@@ -45,14 +46,59 @@ public:
 	}
 };
 
-//TODO: add javadoc comments for these?
+/*
+ * Error checking function for the command-line input.
+ * 
+ * Parameters:
+ * 	numSets - number of sets present in the cache
+ * 	numBlocks - number of blocks in each set
+ * 	numBytes - number of bytes for each block
+ * 	writeAllocation - string to relay whether to write allocate or not
+ * 	howToWrite - string to relay whether to write through or write back
+ * 
+ * Returns:
+ * 	2 if there is an error
+ *  0 if there is no error
+ * 
+ */
 int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAllocation, std::string howToWrite);
-void printOutput(int counts[]);
-int logBase2(int num);
-int isPowerOfTwo(int num);
-void placeBlockInCache(std::vector<Block> givenSet, int numBlocks, Block placeBlock, int counts[], std::string perform, std::string eviction);
-void evictLruBlock(std::vector<Block> givenSet, Block placeBlock, int numBlocks);
 
+/*
+ * Function to print the output of the program (total loads, stores, hits, etc.).
+ *
+ * Parameters:
+ * 	counts - array containing each of the counts to be printed
+ */
+void printOutput(int counts[]);
+
+/*
+ * Function to get the log-base-2 of a number.
+ *
+ * Parameters:
+ * 	num - the number to get log-base-2 of
+ *
+ * Returns:
+ * 	the result of log-base-2 of num
+ */
+int logBase2(int num);
+
+/*
+ * Function to confirm whether a given numer is a power of two or not.
+ *
+ * Parameters:
+ * 	num - the number to check
+ *
+ * Returns:
+ *	whether the given number is a power of two or not (0 false, non-zero otherwise)
+ */
+int isPowerOfTwo(int num);
+
+/*
+ * Main method for a cache simulator program in C++.
+ *
+ * Parameters:
+ * 	main method/command line arguments
+ */
 int main(int argc, char *argv[]) {
 
 	int numSets;
@@ -64,20 +110,17 @@ int main(int argc, char *argv[]) {
 	//array of all the counts that we need to output
 	int counts[7] = {0}; // counts[0] -> total loads, counts[1] -> total stores, counts[2] -> load hits
 	// counts[3] -> load misses, counts[4] -> store hits, counts[5] -> store misses, counts[6] -> total cycles
-	int lruCounter = 0; //"global" counter for lru
+	int lruCounter = 0; //"global" counter for access timestamps for the blocks
 
 	// checking for command-line input
-	if (argc == 7)
-	{
-		numSets = std::stoi(argv[1]); //turns type char into an int
+	if (argc == 7) {
+		numSets = std::stoi(argv[1]); //turns type char into a hex and converts to int
 		numBlocks = std::stoi(argv[2]);
 		numBytes = std::stoi(argv[3]);
 		writeAllocation = argv[4];
 		howToWrite = argv[5];
 		eviction = argv[6];
-	}
-	else
-	{ // if there are not 6 other parameters passed in from command line other than ./csim
+	} else { // if there are not 6 other parameters passed in from command line other than ./csim
 		std::cerr << "Not enough parameters passed in through command line\n";
 		return 1;
 	}
@@ -96,14 +139,14 @@ int main(int argc, char *argv[]) {
 	}
 
 	std::string performField;
-	while (std::cin >> performField) { //or endof
+	while (std::cin >> performField) { 
 
 		long address;
 		std::cin >> std::hex >> address;
 		int garbageVal;
 		std::cin >> garbageVal;
 
-		lruCounter++;
+		lruCounter++; //increments "global" access timestamp for lru
 
 		int numOffsetBits = logBase2(numBytes);
 		int numIndexBits = logBase2(numSets);
@@ -150,6 +193,7 @@ int main(int argc, char *argv[]) {
 					if(eviction.compare("lru") == 0) {
 						unsigned idxToFind;
 						unsigned minVal = INT_MAX;
+						//calculates the index of the block with the smallest timestamp
 						for (int i = 0; i < numBlocks; i++) {
 							if (cache[index][i].access_ts < minVal) {
 								minVal = cache[index][i].access_ts;
@@ -212,6 +256,7 @@ int main(int argc, char *argv[]) {
 						if(eviction.compare("lru") == 0) {
 						unsigned idxToFind;
 						unsigned minVal = INT_MAX;
+						//calculates the index of the block with the smallest timestamp
 						for (int i = 0; i < numBlocks; i++) {
 							if (cache[index][i].access_ts < minVal) {
 								minVal = cache[index][i].access_ts;
@@ -235,12 +280,13 @@ int main(int argc, char *argv[]) {
 					}
 				} else {
 					if (howToWrite.compare("write-through") == 0) {
-						counts[6] += 100;					}
+						counts[6] += 100;
+					}
 				}
 			}
 		}
 	}
-
+	//print output counts
 	printOutput(counts);
 }
 
