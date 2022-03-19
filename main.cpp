@@ -14,7 +14,6 @@
 class Block
 {
 public: //shuold these be public?
-	unsigned offset;
 	unsigned index;
 	unsigned tag;
 	bool valid;
@@ -25,7 +24,6 @@ public: //shuold these be public?
 public:
 	Block()
 	{
-		offset = 0;
 		index = 0;
 		tag = 0;
 		valid = false;
@@ -36,9 +34,8 @@ public:
 
 public:
 	//parameterized constructor
-	Block(unsigned offset, unsigned index, unsigned tag, bool valid, bool dirty, unsigned load_ts, unsigned access_ts)
+	Block(unsigned index, unsigned tag, bool valid, bool dirty, unsigned load_ts, unsigned access_ts)
 	{
-		this->offset = offset;
 		this->index = index;
 		this->tag = tag;
 		this->valid = valid;
@@ -111,21 +108,18 @@ int main(int argc, char *argv[]) {
 		int numOffsetBits = logBase2(numBytes);
 		int numIndexBits = logBase2(numSets);
 
-		//logBase2(numBytes) gives you the number of offset bits. Then,
-		//we left shift 1 so it can have logBase2(numBytes) number of trailing zeros.
+		//logBase2(numSets) gives you the number of offset bits. Then,
+		//we left shift 1 so it can have logBase2(numSets) number of trailing zeros.
 		//Then, we subtract 1 so that we can have a binary number with
-		//logBase2(numBytes) number of bits of just 1s. We later use this result
+		//logBase2(numSets) number of bits of just 1s. We later use this result
 		//with the & operator to isolate the respective bits in the address.
-		unsigned offsetBits = (1 << numOffsetBits) - 1;
-		//similar approach as above
 		unsigned indexBits = (1 << numIndexBits) - 1;
 
-		unsigned offset = address & offsetBits;
 		address >>= numOffsetBits;
 		unsigned index = address & indexBits;
 		unsigned tag = address >> numIndexBits; //tag value is whatever's left
 
-		Block currBlock(offset, index, tag, true, false, 0, lruCounter); //TODO: are these variables referring to our Block class's data fields since those are public?
+		Block currBlock(index, tag, true, false, 0, lruCounter); //TODO: are these variables referring to our Block class's data fields since those are public?
 
 		if (performField.compare("s") == 0) {
 			currBlock.dirty = true;
@@ -133,77 +127,55 @@ int main(int argc, char *argv[]) {
 		
 		//placeBlockInCache(cache[index], numBlocks, currBlock, counts, performField, eviction);
 
-		bool foundSpot = false;
-		for (int i = 0; i < numBlocks; i++)
-		{
-			if (!cache[index][i].valid || currBlock.dirty != cache[index][i].dirty) //miss (down)
-			{ //the first block that's encountered that is invalid/empty, we place given block
-				//cache[index][i] = currBlock;
-				cache[index][i].tag = currBlock.tag;
-				cache[index][i].offset = currBlock.offset;
-				cache[index][i].access_ts = currBlock.access_ts;
-				cache[index][i].dirty = currBlock.dirty;
-				cache[index][i].valid = true;
-				foundSpot = true;
-				if (performField.compare("l") == 0)
-				{
-					counts[3]++; //increment load miss
-				}
-				else
-				{
-					counts[5]++; //increment store miss
-				}
-				break;
-			}
-			if (currBlock.tag == cache[index][i].tag) //hit (up)
-			{
-				//cache[index][i] = currBlock;
-				cache[index][i].access_ts = currBlock.access_ts;
-				foundSpot = true;
-				if (performField.compare("l") == 0)
-				{
-					counts[2]++; //increment load hit
-				}
-				else
-				{
-					counts[4]++; //increment store hit
-				}
-				break;
-			}
-		}
-		if (!foundSpot)
-		{ //this means that we have to evict a block, set is full
-			if (performField.compare("l") == 0)
-			{
-				counts[3]++; //increment load miss
-			}
-			else
-			{
-				counts[5]++; //increment store miss
-			}
-			//need to evict based on lru or fifo
-			if (eviction.compare("lru"))
-			{
-				//evictLruBlock(cache[index], currBlock, numBlocks);
-				unsigned lowest_val = INT_MAX;
-				int idx;
-				for (int i = 0; i < numBlocks; i++) {
-					if (cache[index][i].access_ts < lowest_val) {
-						lowest_val = cache[index][i].access_ts;
-						idx = i;
-					}
-				}
-				cache[index][idx].offset = currBlock.offset;
-				cache[index][idx].tag = currBlock.tag;
-				cache[index][idx].access_ts = currBlock.access_ts;
-				cache[index][idx].dirty = currBlock.dirty;
-			}
-			//TODO: Need to implement FIFO (MS3)
-		}
-
+		bool alreadyExists = false;
 		// counts loads and stores
 		if (performField.compare("l") == 0) {
 			counts[0]++;
+			for (int i = 0; i < numBlocks; i++) {
+				if (cache[index][i].tag == currBlock.tag && cache[index][i].valid) {
+					alreadyExists = true;
+					counts[2]++; //increment load hits
+					cache[index][i].access_ts = lruCounter;
+					counts[6]++; //increment cycle count
+				}
+			}
+			if (!alreadyExists) {
+				counts[3]++; // increment load misses
+				counts[6] += (numBytes / 4) * 100; //increment cycle count
+				int idx; 
+				for (idx = 0; idx < numBlocks; idx++) {
+					if (!cache[index][idx].valid) {
+						cache[index][idx].tag = currBlock.tag;
+						cache[index][idx].access_ts = currBlock.access_ts;
+						//TODO: Add load_ts for MS3
+						cache[index][idx].dirty = false;
+						cache[index][idx].valid = true;
+						break;
+					}
+				}
+				if (idx == numBlocks) { //meaning we've reached the end of the set
+					if(eviction.compare("lru") == 0) {
+						unsigned idxToFind;
+						unsigned minVal = INT_MAX;
+						for (int i = 0; i < numBlocks; i++) {
+							if (cache[index][i].access_ts < minVal) {
+								idxToFind = i;
+							}
+						}
+						if (howToWrite.compare("write-through") != 0 && !cache[index][idxToFind].dirty) {
+							counts[6] += (numBytes / 4) * 100;
+						}
+						//load at min index
+						cache[index][idxToFind].tag = currBlock.tag;
+						cache[index][idxToFind].access_ts = currBlock.access_ts;
+						//TODO: Add load_ts for MS3
+						cache[index][idxToFind].dirty = false;
+						cache[index][idxToFind].valid = true;
+					} else {
+						//TODO: fifo for MS3
+					}
+				}
+			}
 		} else if (performField.compare("s") == 0) {
 			counts[1]++;
 		}
@@ -327,3 +299,69 @@ int errorCheck(int numSets, int numBlocks, int numBytes, std::string writeAlloca
 	}
 	return 0;
 }
+
+/* 
+
+if (!cache[index][i].valid) //miss (down)
+			{ //the first block that's encountered that is invalid/empty, we place given block
+				//cache[index][i] = currBlock;
+				cache[index][i].tag = currBlock.tag;
+				cache[index][i].access_ts = currBlock.access_ts;
+				cache[index][i].dirty = currBlock.dirty;
+				cache[index][i].valid = true;
+				foundSpot = true;
+				if (performField.compare("l") == 0)
+				{
+					counts[3]++; //increment load miss
+				}
+				else
+				{
+					counts[5]++; //increment store miss
+				}
+				break;
+			}
+			if (currBlock.tag == cache[index][i].tag && cache[index][i].valid) //hit (up)
+			{
+				//cache[index][i] = currBlock;
+				cache[index][i].access_ts = currBlock.access_ts;
+				foundSpot = true;
+				if (performField.compare("l") == 0)
+				{
+					counts[2]++; //increment load hit
+				}
+				else
+				{
+					counts[4]++; //increment store hit
+				}
+				break;
+			}
+if (!foundSpot)
+		{ //this means that we have to evict a block, set is full
+			if (performField.compare("l") == 0)
+			{
+				counts[3]++; //increment load miss
+			}
+			else
+			{
+				counts[5]++; //increment store miss
+			}
+			//need to evict based on lru or fifo
+			if (eviction.compare("lru"))
+			{
+				//evictLruBlock(cache[index], currBlock, numBlocks);
+				unsigned lowest_val = INT_MAX;
+				int idx;
+				for (int i = 0; i < numBlocks; i++) {
+					if (cache[index][i].access_ts < lowest_val) {
+						lowest_val = cache[index][i].access_ts;
+						idx = i;
+					}
+				}
+				cache[index][idx].tag = currBlock.tag;
+				cache[index][idx].access_ts = currBlock.access_ts;
+				cache[index][idx].dirty = currBlock.dirty;
+			}
+			//TODO: Need to implement FIFO (MS3)
+		}
+
+			*/
