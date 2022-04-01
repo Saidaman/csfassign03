@@ -93,13 +93,16 @@ int logBase2(int num);
  */
 int isPowerOfTwo(int num);
 
-/*
+void setBlock(std::vector<std::vector<Block> > cache, unsigned tag, unsigned lruCounter, unsigned setIndex, int blockIndex, bool dirty);
+
+	/*
  * Main method for a cache simulator program in C++.
  *
  * Parameters:
  * 	main method/command line arguments
  */
-int main(int argc, char *argv[]) {
+	int main(int argc, char *argv[])
+{
 
 	int numSets;
 	int numBlocks;
@@ -181,38 +184,45 @@ int main(int argc, char *argv[]) {
 				int idx; 
 				for (idx = 0; idx < numBlocks; idx++) {
 					if (!cache[index][idx].valid) {
+						//setBlock(cache, currBlock.tag, lruCounter, index, idx, false);
 						cache[index][idx].tag = currBlock.tag;
-						cache[index][idx].access_ts = lruCounter;//currBlock.access_ts;
-						//TODO: Add load_ts for MS3
+						cache[index][idx].access_ts = lruCounter; //currBlock.access_ts;
+						cache[index][idx].load_ts = lruCounter;
 						cache[index][idx].dirty = false;
 						cache[index][idx].valid = true;
 						break;
 					}
 				}
 				if (idx == numBlocks) { //meaning we've reached the end of the set without finding invalid blocks
-					if(eviction.compare("lru") == 0) {
 						unsigned idxToFind;
 						unsigned minVal = INT_MAX;
 						//calculates the index of the block with the smallest timestamp
-						for (int i = 0; i < numBlocks; i++) {
-							if (cache[index][i].access_ts < minVal) {
-								minVal = cache[index][i].access_ts;
-								idxToFind = i;
+						if (eviction.compare("lru") == 0) {
+							for (int i = 0; i < numBlocks; i++) {
+								if (cache[index][i].access_ts < minVal) {
+									minVal = cache[index][i].access_ts;
+									idxToFind = i;
+								}
+							}
+						} else { //this means its fifo
+							for (int i = 0; i < numBlocks; i++) {
+								if (cache[index][i].load_ts < minVal) {
+									minVal = cache[index][i].load_ts;
+									idxToFind = i;
+								}
 							}
 						}
-						if (howToWrite.compare("write-through") != 0 && cache[index][idxToFind].dirty) {
-							counts[6] += numBytes / 4 * 100;
+							if (howToWrite.compare("write-through") != 0 && cache[index][idxToFind].dirty) {
+								counts[6] += numBytes / 4 * 100;
+							}
+							//load at min index
+							//setBlock(cache, currBlock.tag, lruCounter, index, idxToFind, false);
+							cache[index][idxToFind].tag = currBlock.tag;
+							cache[index][idxToFind].access_ts = currBlock.access_ts;
+							cache[index][idxToFind].load_ts = lruCounter; //TODO: Add load_ts for MS3
+							cache[index][idxToFind].dirty = false;
+							cache[index][idxToFind].valid = true;
 						}
-						//load at min index
-						cache[index][idxToFind].tag = currBlock.tag;
-						cache[index][idxToFind].access_ts = currBlock.access_ts;
-						//TODO: Add load_ts for MS3
-						cache[index][idxToFind].dirty = false;
-						cache[index][idxToFind].valid = true;
-					} else {
-						//TODO: fifo for MS3 
-					}
-				}
 			}
 		} else if (performField.compare("s") == 0) {
 			counts[1]++; //increment total stores count
@@ -244,40 +254,49 @@ int main(int argc, char *argv[]) {
 					int idx;
 					for (idx = 0; idx < numBlocks; idx++) {
 						if (!cache[index][idx].valid) {
+							//setBlock(cache, currBlock.tag, lruCounter, index, idx, false);
 							cache[index][idx].tag = currBlock.tag;
 							cache[index][idx].access_ts = currBlock.access_ts;
-							//TODO: Add load_ts for MS3
+							cache[index][idx].load_ts = lruCounter; //TODO: Add load_ts for MS3
 							cache[index][idx].dirty = false;
 							cache[index][idx].valid = true;
 							break;
 						}
 					}
 					if (idx == numBlocks) { //meaning we've reached the end of the set
-						if(eviction.compare("lru") == 0) {
 						unsigned idxToFind;
 						unsigned minVal = INT_MAX;
 						//calculates the index of the block with the smallest timestamp
-						for (int i = 0; i < numBlocks; i++) {
-							if (cache[index][i].access_ts < minVal) {
-								minVal = cache[index][i].access_ts;
-								idxToFind = i;
+						if (eviction.compare("lru") == 0) {
+							for (int i = 0; i < numBlocks; i++) {
+								if (cache[index][i].access_ts < minVal) {
+									minVal = cache[index][i].access_ts;
+									idxToFind = i;
+								}
+							}
+						} else { //means its fifo
+							for (int i = 0; i < numBlocks; i++) {
+								if (cache[index][i].load_ts < minVal) {
+									minVal = cache[index][i].load_ts;
+									idxToFind = i;
+								}
 							}
 						}
-						if (howToWrite.compare("write-through") != 0) {
-							if (cache[index][idxToFind].dirty) {
-								counts[6] += numBytes / 4 * 100;
+							if (howToWrite.compare("write-through") != 0)
+							{
+								if (cache[index][idxToFind].dirty)
+								{
+									counts[6] += numBytes / 4 * 100;
+								}
 							}
+							//store at min index
+							//setBlock(cache, currBlock.tag, lruCounter, index, idxToFind, false);
+							cache[index][idxToFind].tag = currBlock.tag;
+							cache[index][idxToFind].access_ts = currBlock.access_ts;
+							cache[index][idxToFind].load_ts = lruCounter; //TODO: Add load_ts for MS3
+							cache[index][idxToFind].dirty = false;
+							cache[index][idxToFind].valid = true;
 						}
-						//store at min index
-						cache[index][idxToFind].tag = currBlock.tag;
-						cache[index][idxToFind].access_ts = currBlock.access_ts;
-						//TODO: Add load_ts for MS3
-						cache[index][idxToFind].dirty = false;
-						cache[index][idxToFind].valid = true;
-						} else {
-						//TODO: fifo for MS3 
-						}
-					}
 				} else {
 					if (howToWrite.compare("write-through") == 0) {
 						counts[6] += 100;
@@ -290,7 +309,16 @@ int main(int argc, char *argv[]) {
 	printOutput(counts);
 }
 
-int logBase2(int num) {
+void setBlock(std::vector<std::vector<Block> > cache, unsigned tag, unsigned lruCounter, unsigned setIndex, int blockIndex, bool dirty) {
+	cache[setIndex][blockIndex].tag = tag;
+	cache[setIndex][blockIndex].access_ts = lruCounter;
+	cache[setIndex][blockIndex].load_ts = lruCounter;
+	cache[setIndex][blockIndex].dirty = dirty;
+	cache[setIndex][blockIndex].valid = true;
+}
+
+	int logBase2(int num)
+{
 	int res = -1;
 	while (num != 0) {
 		num >>= 1;
